@@ -1,93 +1,103 @@
-# :package_description
+![laravel-loghole-repo-banner](https://pbs.twimg.com/profile_banners/593785558/1671194657/1500x500)
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-<!--delete-->
+# Laravel LogHole
+
+LogHole is a modern, flexible Laravel logging package that supports Redis and database drivers. Designed for seamless integration with Laravel's Log facade, it leverages PHP attributes for a clean and powerful logging experience.
+
+[![Latest version](https://img.shields.io/github/release/digitaldev-lx/loghole?style=flat-square)](https://github.com/digitaldev-lx/loghole/releases)
+[![GitHub license](https://img.shields.io/github/license/digitaldev-lx/loghole?style=flat-square)](https://github.com/digitaldev-lx/loghole/blob/master/LICENSE)
+
 ---
-This repo can be used to scaffold a Laravel package. Follow these steps to get started:
 
-1. Press the "Use this template" button at the top of this repo to create a new repo with the contents of this skeleton.
-2. Run "php ./configure.php" to run a script that will replace all placeholders throughout all the files.
-3. Have fun creating your package.
-4. If you need help creating a package, consider picking up our <a href="https://laravelpackage.training">Laravel Package Training</a> video course.
+## Requirements
+
+| Release |  PHP   | Laravel |
+|---------|:------:|:-------:|
+| 1.0.0   | >= 8.2 |   10    |
+
 ---
-<!--/delete-->
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
-
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/:package_name.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/:package_name)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
 
 ## Installation
 
-You can install the package via composer:
-
+Install the package via Composer:
 ```bash
-composer require :vendor_slug/:package_slug
+composer require digitaldev-lx/loghole
 ```
 
-You can publish and run the migrations with:
+Publish the configuration file:
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-migrations"
-php artisan migrate
+php artisan vendor:publish --provider="DigitaldevLx\\LogHole\\LogHoleServiceProvider" --tag=config
 ```
 
-You can publish the config file with:
+## Configurations
+In the configuration file, specify the driver you'd like to use (Redis or database). By default, the package supports both, allowing you to switch based on your needs.
 
-```bash
-php artisan vendor:publish --tag=":package_slug-config"
-```
-
-This is the contents of the published config file:
+# Example Configuration for Redis:
 
 ```php
-return [
-];
+'loghole' => [
+    'driver' => 'redis',
+    'connection' => env('LOGHOLE_REDIS_CONNECTION', 'default'),
+    'channel' => env('LOGHOLE_REDIS_CHANNEL', 'loghole_logs')
+],
 ```
 
-Optionally, you can publish the views using
+# Example Configuration for Database:
 
-```bash
-php artisan vendor:publish --tag=":package_slug-views"
+```php
+'loghole' => [
+    'driver' => 'database',
+    'table' => env('LOGHOLE_TABLE', 'loghole_logs')
+],
 ```
-
 ## Usage
 
+Log messages through Laravel’s Log facade, which will route logs to your chosen storage driver (Redis or database):
+
 ```php
-$variable = new VendorName\Skeleton();
-echo $variable->echoPhrase('Hello, VendorName!');
+use Illuminate\Support\Facades\Log;
+
+Log::info('This is a log message for LogHole!');
+Log::error('An error occurred in LogHole');
 ```
 
-## Testing
+## Using PHP Attributes
 
-```bash
-composer test
+LogHole offers PHP attribute-based logging to automatically log actions when specific attributes are applied to methods or classes:
+
+```php
+use DigitaldevLx\LogHole\Attributes\Loggable;
+
+#[Loggable(level: 'info')]
+public function performAction()
+{
+    // Action will be logged at 'info' level
+}
 ```
 
-## Changelog
+## Advanced Configuration
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+For fine-grained control, LogHole allows custom attributes for different log levels (e.g., info, warning, error), enabling you to log certain events based on severity.
 
-## Contributing
+License
+digitaldev-lx/loghole is open-sourced software licensed under the MIT license.
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+About DigitalDev
+DigitalDev is a web development agency based in Lisbon, Portugal, specializing in Laravel, Livewire, and Tailwind CSS. Our partnership with Codeboys enables us to provide exceptional solutions tailored to our clients’ needs.
 
-## Security Vulnerabilities
+---
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [:author_name](https://github.com/:author_username)
-- [All Contributors](../../contributors)
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+**digitaldev-lx/laravel-eupago** is open-sourced software licensed under the [MIT license](https://github.com/digitaldev-lx/laravel-eupago/blob/master/LICENSE).
+
+
+## About DigitalDev
+
+[DigitalDev](https://www.digitaldev.pt) is a web development agency based on Lisbon, Portugal. We specialize in Laravel, Livewire, and Tailwind CSS.
+[Codeboys](https://www.codeboys.pt) is our special partner and we work together to deliver the best solutions for our clients.
+
+
+
