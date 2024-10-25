@@ -33,7 +33,7 @@ php artisan vendor:publish --provider="DigitaldevLx\\LogHole\\LogHoleServiceProv
 ## Configurations
 In the configuration file, specify the driver you'd like to use (Redis or database). By default, the package supports both, allowing you to switch based on your needs.
 
-# Example Configuration for Redis:
+## Example Configuration for Redis:
 
 ```php
 'loghole' => [
@@ -43,7 +43,7 @@ In the configuration file, specify the driver you'd like to use (Redis or databa
 ],
 ```
 
-# Example Configuration for Database:
+## Example Configuration for Database:
 
 ```php
 'loghole' => [
@@ -91,7 +91,7 @@ DigitalDev is a web development agency based in Lisbon, Portugal, specializing i
 
 ## License
 
-**digitaldev-lx/laravel-eupago** is open-sourced software licensed under the [MIT license](https://github.com/digitaldev-lx/laravel-eupago/blob/master/LICENSE).
+**digitaldev-lx/log-hole** is open-sourced software licensed under the [MIT license](https://github.com/digitaldev-lx/laravel-eupago/blob/master/LICENSE).
 
 
 ## About DigitalDev
