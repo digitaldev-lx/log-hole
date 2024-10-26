@@ -21,36 +21,80 @@ LogHole is a modern, flexible Laravel logging package that supports Redis and da
 
 Install the package via Composer:
 ```bash
-composer require digitaldev-lx/loghole
+composer require digitaldev-lx/log-hole
 ```
 
-Publish the configuration file:
+You must publish the configuration file:
 
 ```bash
-php artisan vendor:publish --provider="DigitaldevLx\\LogHole\\LogHoleServiceProvider" --tag=config
+php artisan vendor:publish --provider="DigitalDevLx\\LogHole\\LogHoleServiceProvider" --tag=logs-config
 ```
 
 ## Configurations
-In the configuration file, specify the driver you'd like to use (Redis or database). By default, the package supports both, allowing you to switch based on your needs.
+In the configuration file, specify the driver you'd like to use (database). By default, the package supports the database driver.
 
-## Example Configuration for Redis:
-
-```php
-'loghole' => [
-    'driver' => 'redis',
-    'connection' => env('LOGHOLE_REDIS_CONNECTION', 'default'),
-    'channel' => env('LOGHOLE_REDIS_CHANNEL', 'loghole_logs')
-],
-```
 
 ## Example Configuration for Database:
 
+.env file
 ```php
-'loghole' => [
-    'driver' => 'database',
-    'table' => env('LOGHOLE_TABLE', 'loghole_logs')
-],
+LOG_CHANNEL=database
 ```
+
+configuration file logging.php
+```php
+'channels' => [
+    /*.... */
+    'database' => config('log-hole.database'),
+],
+
+```
+
+## Use Middleware:
+
+## Laravel 10.x
+Laravel 10.x uses the web middleware group by default. To log all requests, add the LogHole middleware to the web group in the app/Http/Kernel.php file:
+```php
+use DigitalDevLx\LogHole\Middlewares\LogHoleMiddleware;
+
+protected $middlewareGroups = [
+    'web' => [
+        // outros middlewares
+        \DigitalDevLx\LogHole\Middleware\LogHoleMiddleware::class,
+    ],
+];
+```
+
+## Laravel 11.x
+Laravel 11.x also uses the web middleware group by default. To log all requests, add the LogHole middleware to the withMiddleware method in the bootstrap/app.php file:
+
+```php
+use DigitalDevLx\LogHole\Middlewares\LogHoleMiddleware;
+ 
+->withMiddleware(function (Middleware $middleware) {
+     $middleware->append(LogHoleMiddleware::class);
+})
+```
+
+## Using PHP Attributes
+
+LogHole offers PHP attribute-based logging to automatically log actions when specific attributes are applied to methods or classes. To use the Loggable attribute, ***it is necessary to implement the LogHole middleware***.
+```php
+use DigitalDevLx\LogHole\Attributes\Loggable;
+
+class ExampleService
+{
+    #[Loggable(message: 'Executando o método importante', level: 'info')]
+    public function metodoImportante()
+    {
+        // Lógica 
+    }
+}
+```
+
+With the middleware in place, all calls to methods annotated with Loggable will be logged as specified.
+
+
 ## Usage
 
 Log messages through Laravel’s Log facade, which will route logs to your chosen storage driver (Redis or database):
@@ -62,26 +106,13 @@ Log::info('This is a log message for LogHole!');
 Log::error('An error occurred in LogHole');
 ```
 
-## Using PHP Attributes
-
-LogHole offers PHP attribute-based logging to automatically log actions when specific attributes are applied to methods or classes:
-
-```php
-use DigitaldevLx\LogHole\Attributes\Loggable;
-
-#[Loggable(level: 'info')]
-public function performAction()
-{
-    // Action will be logged at 'info' level
-}
-```
 
 ## Advanced Configuration
 
 For fine-grained control, LogHole allows custom attributes for different log levels (e.g., info, warning, error), enabling you to log certain events based on severity.
 
 License
-digitaldev-lx/loghole is open-sourced software licensed under the MIT license.
+digitaldev-lx/log-hole is open-sourced software licensed under the MIT license.
 
 About DigitalDev
 DigitalDev is a web development agency based in Lisbon, Portugal, specializing in Laravel, Livewire, and Tailwind CSS. Our partnership with Codeboys enables us to provide exceptional solutions tailored to our clients’ needs.

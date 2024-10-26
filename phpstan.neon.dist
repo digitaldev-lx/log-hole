@@ -10,3 +10,5 @@ parameters:
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
+   # cache:
+   #     file: '%rootDir%/../var/phpstan.cache'

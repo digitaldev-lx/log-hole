@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace DigitalDevLx\LogHole\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LogHoleCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'log-hole';
 
     public $description = 'My command';
 
