@@ -4,8 +4,8 @@
 
 LogHole is a modern, flexible Laravel logging package that supports Redis and database drivers. Designed for seamless integration with Laravel's Log facade, it leverages PHP attributes for a clean and powerful logging experience.
 
-[![Latest version](https://img.shields.io/github/release/digitaldev-lx/loghole?style=flat-square)](https://github.com/digitaldev-lx/loghole/releases)
-[![GitHub license](https://img.shields.io/github/license/digitaldev-lx/loghole?style=flat-square)](https://github.com/digitaldev-lx/loghole/blob/master/LICENSE)
+[![Latest version](https://img.shields.io/github/release/digitaldev-lx/loghole?style=flat-square)](https://github.com/digitaldev-lx/log-hole/releases)
+[![GitHub license](https://img.shields.io/github/license/digitaldev-lx/loghole?style=flat-square)](https://github.com/digitaldev-lx/log-hole/blob/master/LICENSE)
 
 ---
 
@@ -115,7 +115,7 @@ For fine-grained control, LogHole allows custom attributes for different log lev
 
 ## License
 
-**digitaldev-lx/log-hole** is open-sourced software licensed under the [MIT license](https://github.com/digitaldev-lx/laravel-eupago/blob/master/LICENSE).
+**digitaldev-lx/log-hole** is open-sourced software licensed under the [MIT license](https://github.com/digitaldev-lx/log-hole/blob/master/LICENSE).
 
 
 ## About DigitalDev
