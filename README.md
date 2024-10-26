@@ -111,14 +111,7 @@ Log::error('An error occurred in LogHole');
 
 For fine-grained control, LogHole allows custom attributes for different log levels (e.g., info, warning, error), enabling you to log certain events based on severity.
 
-License
-digitaldev-lx/log-hole is open-sourced software licensed under the MIT license.
-
-About DigitalDev
-DigitalDev is a web development agency based in Lisbon, Portugal, specializing in Laravel, Livewire, and Tailwind CSS. Our partnership with Codeboys enables us to provide exceptional solutions tailored to our clients’ needs.
-
 ---
-
 
 ## License
 
