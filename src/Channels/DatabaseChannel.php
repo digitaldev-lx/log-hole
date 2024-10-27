@@ -29,7 +29,7 @@ class DatabaseChannel extends AbstractProcessingHandler
             'level' => $record->level->getName(),
             'message' => $record->message,
             'context' => json_encode($record->context),
-            'logged_at' => now()
+            'logged_at' => now(),
         ]);
     }
 }
