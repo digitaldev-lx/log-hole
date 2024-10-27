@@ -2,7 +2,7 @@
 
 # Laravel LogHole
 
-LogHole is a modern, flexible Laravel logging package that supports Redis and database drivers. Designed for seamless integration with Laravel's Log facade, it leverages PHP attributes for a clean and powerful logging experience.
+LogHole is a modern, flexible Laravel logging package that supports database drivers. Designed for seamless integration with Laravel's Log facade, it leverages PHP attributes for a clean and powerful logging experience.
 
 [![Latest version](https://img.shields.io/github/release/digitaldev-lx/log-hole?style=flat-square)](https://github.com/digitaldev-lx/log-hole/releases)
 [![GitHub license](https://img.shields.io/github/license/digitaldev-lx/log-hole?style=flat-square)](https://github.com/digitaldev-lx/log-hole/blob/master/LICENSE)
@@ -75,6 +75,7 @@ use DigitalDevLx\LogHole\Middlewares\LogHoleMiddleware;
 ## Using PHP Attributes
 
 LogHole offers PHP attribute-based logging to automatically log actions when specific attributes are applied to methods or classes. To use the Loggable attribute, ***it is necessary to implement the LogHole middleware***.
+
 ```php
 use DigitalDevLx\LogHole\Attributes\Loggable;
 
@@ -114,6 +115,7 @@ The `log-hole:tail` command allows you to retrieve logs from the database based 
 
 ## Usage
 To run the `log-hole:tail` command, use the following syntax:
+
 ```bash
 php artisan log-hole:tail {options}
 ```
