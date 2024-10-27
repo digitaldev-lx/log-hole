@@ -1,3 +1,5 @@
+![laravel-eupago-repo-banner](https://pbs.twimg.com/profile_banners/593785558/1671194657/1500x500)
+
 # Laravel LogHole
 
 LogHole is a modern, flexible Laravel logging package that supports Redis and database drivers. Designed for seamless integration with Laravel's Log facade, it leverages PHP attributes for a clean and powerful logging experience.
