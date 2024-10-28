@@ -81,8 +81,8 @@ use DigitalDevLx\LogHole\Attributes\Loggable;
 
 class ExampleService
 {
-    #[Loggable(message: 'Executando o método importante', level: 'info')]
-    public function metodoImportante()
+    #[Loggable(message: 'Executed important method', level: 'info')]
+    public function importantMethod()
     {
         // Lógica 
     }
@@ -124,7 +124,6 @@ php artisan log-hole:tail {options}
 
 The command provides several options to customize the logs you want to retrieve:
 
-- **`--all`**: Fetch all logs, regardless of level.
 - **`--emergency`**: Fetch only logs with the "EMERGENCY" level.
 - **`--critical`**: Fetch only logs with the "CRITICAL" level.
 - **`--error`**: Fetch only logs with the "ERROR" level.
@@ -135,6 +134,7 @@ The command provides several options to customize the logs you want to retrieve:
 - **`--from=`**: Specify the starting date to filter logs, using a date format (e.g., `2024-10-01`).
 - **`--to=`**: Specify the end date to filter logs, using a date format (e.g., `2024-10-31`).
 - **`--take=`**: Limit the number of log entries displayed (defaults to 10 if not specified).
+- **`--purge`**: Purge all logs from the database.
 
 **Note**: If no specific level is selected, the command will default to retrieving logs at the "ALL" level.
 
@@ -142,9 +142,9 @@ The command provides several options to customize the logs you want to retrieve:
 
 Here are some examples of how to use the `log-hole:tail` command effectively:
 
-***Fetch all logs***
+***Fetch all logs from the database (without `--take` tag it will take last 10 logs by default)***
 ```bash
-php artisan log-hole:tail --all
+php artisan log-hole:tail
 ```
 
 ***Fetch only error-level logs from a specific date range***
@@ -165,6 +165,11 @@ php artisan log-hole:tail --critical --take=5
 ***Fetch info-level logs from a specific date onwards***
 ```bash
 php artisan log-hole:tail --info --from=2024-10-01
+```
+
+***Purge all logs from the database***
+```bash
+php artisan log-hole:tail --purge
 ```
 
 ### Output
@@ -197,4 +202,5 @@ LogHole simplifies the logging process in Laravel applications, making it easier
 digitaldev-lx/log-hole is open-sourced software licensed under the MIT license.
 
 ## About DigitalDev
-DigitalDev is a web development agency based in Lisbon, Portugal, specializing in Laravel, Livewire, and Tailwind CSS. Our partnership with Codeboys enables us to provide exceptional solutions tailored to our clients’ needs.
+[DigitalDev](https://www.digitaldev.pt) is a web development agency based on Lisbon, Portugal. We specialize in Laravel, Livewire, and Tailwind CSS.
+[Codeboys](https://www.codeboys.pt) is our special partner and we work together to deliver the best solutions for our clients.
