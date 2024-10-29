@@ -5,11 +5,9 @@ namespace DigitalDevLx\LogHole\Middlewares;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Log;
-use ReflectionException;
 
 class LogHoleDashboardAccessMiddleware
 {
-
     public function handle($request, Closure $next)
     {
 
