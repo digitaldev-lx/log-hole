@@ -103,13 +103,33 @@ Log::error('An error occurred in LogHole');
 
 ## View logs
 
-The LogHole dashboard provides a user-friendly interface for viewing logs. You can filter logs by date, level, and message, as well as search for specific log entries.
+The LogHole dashboard provides a user-friendly interface for viewing logs and a GUI Dashboard. You can filter logs by date, level, and message, as well as search for specific log entries.
+
+## Dashboard
+
+The LogHole dashboard provides a user-friendly interface for viewing logs and a GUI Dashboard. You can filter logs by level, and message, as well as search for specific log entries.
+
+You can customize the dashboard route in the configuration file. By default, the dashboard is accessible at the `/log-hole` route.
+
+```php
+ 'dashboard_route' => 'log-hole'
+```
+
+You can too specify the users that can access the dashboard. By default, the dashboard is accessible to all users.
+
+```php
+'authorized_users' => [
+    // add the email of the authorized users
+],
+```
+
+If the array is empty, the dashboard will be accessible to all users.
 
 ## Laravel Pail
 
 You can use Laravel Pail to view logs in real-time. Laravel Pail is a powerful tool for monitoring logs and debugging applications. It provides a user-friendly interface for viewing logs in real-time, as well as detailed information about log entries.
 
-# LogHole Tail Command
+## LogHole Tail Command
 
 The `log-hole:tail` command allows you to retrieve logs from the database based on specific log levels or date ranges. This command is highly configurable, enabling you to filter logs by level and date range to get precisely the information you need.
 
