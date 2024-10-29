@@ -4,7 +4,6 @@ namespace DigitalDevLx\LogHole\Http\Controllers;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 
 class LogHoleController
 {
