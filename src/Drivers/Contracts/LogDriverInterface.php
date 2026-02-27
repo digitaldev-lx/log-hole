@@ -7,13 +7,14 @@ use DigitalDevLx\LogHole\DataTransferObjects\LogStats;
 use DigitalDevLx\LogHole\Enums\LogLevel;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use stdClass;
 
 interface LogDriverInterface
 {
     public function insert(LogLevel $level, string $message, ?array $context, ?DateTimeInterface $loggedAt): void;
 
     /**
-     * @return Collection<int, object>
+     * @return Collection<int, stdClass>
      */
     public function query(
         ?LogLevel $level = null,

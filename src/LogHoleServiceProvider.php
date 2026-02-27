@@ -30,7 +30,7 @@ class LogHoleServiceProvider extends PackageServiceProvider
 
     public function bootingPackage(): void
     {
-        Gate::define('viewLogHole', function (?object $user = null) {
+        Gate::define('viewLogHole', function ($user = null) {
             $authorizedUsers = config('log-hole.authorized_users');
 
             if (empty($authorizedUsers)) {
@@ -41,7 +41,11 @@ class LogHoleServiceProvider extends PackageServiceProvider
                 return false;
             }
 
-            return in_array($user->email, $authorizedUsers, strict: true);
+            $email = method_exists($user, 'getEmailForVerification')
+                ? $user->getEmailForVerification()
+                : (string) data_get($user, 'email');
+
+            return in_array($email, $authorizedUsers, strict: true);
         });
     }
 }

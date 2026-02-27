@@ -23,8 +23,12 @@ class LogHoleDashboardAccessMiddleware
             throw new AuthorizationException('You must be logged in to view this dashboard.');
         }
 
-        if (! in_array($user->email, $authorizedUsers, strict: true)) {
-            Log::warning("User {$user->email} tried to access the LogHole dashboard.");
+        $email = method_exists($user, 'getEmailForVerification')
+            ? $user->getEmailForVerification()
+            : (string) data_get($user, 'email');
+
+        if (! in_array($email, $authorizedUsers, strict: true)) {
+            Log::warning("User {$email} tried to access the LogHole dashboard.");
             throw new AuthorizationException('You don\'t have access to view this dashboard.');
         }
 
