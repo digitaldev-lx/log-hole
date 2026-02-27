@@ -30,3 +30,7 @@ phpstan.neon
 testbench.yaml
 /docs
 /coverage
+
+#CALUDE
+.claude
+CLAUDE.md

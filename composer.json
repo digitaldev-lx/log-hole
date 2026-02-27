@@ -1,10 +1,11 @@
 {
     "name": "digitaldev-lx/log-hole",
-    "description": "LogHole is a modern, flexible Laravel logging package that supports Redis and database drivers. Designed for seamless integration with Laravel's Log facade, it leverages PHP attributes for a clean and powerful logging experience.",
+    "description": "A modern Laravel logging package with multi-driver database support, web dashboard, and PHP attributes for declarative logging.",
     "keywords": [
         "logs",
         "database logs",
-        "redis logs",
+        "multi-driver",
+        "dashboard",
         "log-hole",
         "laravel"
     ],
@@ -35,9 +36,7 @@
     },
     "autoload": {
         "psr-4": {
-            "DigitalDevLx\\LogHole\\": "src/",
-            "DigitalDevLx\\LogHole\\Database\\Factories\\": "database/factories/",
-            "DigitalDevLx\\LogHole\\Attributes\\": "src/Attributes"
+            "DigitalDevLx\\LogHole\\": "src/"
         }
     },
     "autoload-dev": {

@@ -8,7 +8,5 @@ parameters:
         - config
         - database
     tmpDir: build/phpstan
-    checkOctaneCompatibility: true
-    checkModelProperties: true
-   # cache:
-   #     file: '%rootDir%/../var/phpstan.cache'
+    scanDirectories:
+        - vendor/orchestra/testbench-core/laravel

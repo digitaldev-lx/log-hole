@@ -4,38 +4,77 @@ namespace DigitalDevLx\LogHole\Middlewares;
 
 use Closure;
 use DigitalDevLx\LogHole\Attributes\Loggable;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
-use ReflectionException;
 use ReflectionMethod;
 
 class LogHoleMiddleware
 {
-    /**
-     * @throws ReflectionException
-     */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
 
-        $controller = $request->route()->getController();
-        $action = $request->route()->getActionMethod();
+        $route = $request->route();
 
-        // Usa Reflection para inspecionar a classe e método
+        if (! $route instanceof Route) {
+            return $response;
+        }
+
+        $uses = $route->getAction('uses');
+
+        // Skip closure routes (no controller)
+        if (! is_string($uses) || ! str_contains($uses, '@')) {
+            return $response;
+        }
+
+        $controller = $route->getController();
+        $action = $route->getActionMethod();
+
         $reflection = new ReflectionClass($controller);
+
+        // Check method-level attribute first
+        $loggable = null;
 
         if ($reflection->hasMethod($action)) {
             $method = new ReflectionMethod($controller, $action);
-
             $attribute = $method->getAttributes(Loggable::class)[0] ?? null;
 
-            if ($attribute) {
-                /** @var Loggable $loggable */
+            if ($attribute !== null) {
                 $loggable = $attribute->newInstance();
-
-                // Loga a mensagem e o nível configurados no Attribute
-                Log::log($loggable->level, $loggable->message);
             }
+        }
+
+        // Fall back to class-level attribute
+        if ($loggable === null) {
+            $classAttribute = $reflection->getAttributes(Loggable::class)[0] ?? null;
+
+            if ($classAttribute !== null) {
+                $loggable = $classAttribute->newInstance();
+            }
+        }
+
+        if ($loggable instanceof Loggable) {
+            $context = [];
+
+            if ($loggable->includeRequest) {
+                $context = [
+                    'method' => $request->method(),
+                    'url' => $request->fullUrl(),
+                    'ip' => $request->ip(),
+                ];
+            }
+
+            $logger = $loggable->channel !== null
+                ? Log::channel($loggable->channel)
+                : Log::getFacadeRoot();
+
+            $logger->log(
+                strtolower($loggable->logLevel->value),
+                $loggable->message ?: "{$action} was called",
+                $context,
+            );
         }
 
         return $response;

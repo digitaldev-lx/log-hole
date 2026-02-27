@@ -3,7 +3,9 @@
 namespace DigitalDevLx\LogHole;
 
 use DigitalDevLx\LogHole\Commands\LogHoleCommand;
-use Gate;
+use DigitalDevLx\LogHole\Drivers\Contracts\LogDriverInterface;
+use DigitalDevLx\LogHole\Drivers\DriverFactory;
+use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -12,26 +14,34 @@ class LogHoleServiceProvider extends PackageServiceProvider
     public function configurePackage(Package $package): void
     {
         $package->name('log-hole')
+            ->hasConfigFile()
+            ->hasViews()
+            ->hasRoute('web')
             ->hasCommand(LogHoleCommand::class)
             ->hasMigration('create_logs_table');
     }
 
-    public function boot()
+    public function registeringPackage(): void
     {
-        $this->loadRoutesFrom(__DIR__ . '/routes/web.php');
-        $this->loadViewsFrom(__DIR__ . '/resources/views', 'log-hole');
-        $this->publishes([
-            __DIR__ . '/../config/log-hole.php' => config_path('log-hole.php'),
-        ], 'logs-config'); // Tag personalizado
+        $this->app->singleton(LogDriverInterface::class, function () {
+            return DriverFactory::make();
+        });
+    }
 
-        Gate::define('viewLogHole', function ($user) {
-
+    public function bootingPackage(): void
+    {
+        Gate::define('viewLogHole', function (?object $user = null) {
             $authorizedUsers = config('log-hole.authorized_users');
+
             if (empty($authorizedUsers)) {
                 return true;
             }
 
-            return in_array($user->email, config('log-hole.authorized_users'));
+            if ($user === null) {
+                return false;
+            }
+
+            return in_array($user->email, $authorizedUsers, strict: true);
         });
     }
 }

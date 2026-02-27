@@ -2,34 +2,43 @@
 
 namespace DigitalDevLx\LogHole\Channels;
 
-use Illuminate\Support\Facades\DB;
+use DigitalDevLx\LogHole\Drivers\DriverFactory;
+use DigitalDevLx\LogHole\Enums\LogLevel;
+use Illuminate\Support\Facades\Log;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
+use Throwable;
 
 class DatabaseChannel extends AbstractProcessingHandler
 {
     public function __invoke(array $config)
     {
-        // Define o nível do log com base na configuração, ou "Debug" por padrão
         $level = $config['level'] ?? Level::Debug;
 
-        // Cria o logger e adiciona o handler configurado
         $logger = new Logger('database');
         $logger->pushHandler(new self($level));
 
         return $logger;
     }
 
-    // Implementa o método `write` usando `LogRecord` como parâmetro
     protected function write(LogRecord $record): void
     {
-        DB::table(config('log-hole.database.table'))->insert([
-            'level' => $record->level->getName(),
-            'message' => $record->message,
-            'context' => json_encode($record->context),
-            'logged_at' => now(),
-        ]);
+        try {
+            $driver = DriverFactory::make();
+            $logLevel = LogLevel::fromMonolog($record->level);
+
+            $driver->insert(
+                level: $logLevel,
+                message: $record->message,
+                context: ! empty($record->context) ? $record->context : null,
+                loggedAt: $record->datetime,
+            );
+        } catch (Throwable $e) {
+            // Prevent infinite loop: do not log to same channel
+            // Use error_log as last resort fallback
+            error_log("[LogHole] Failed to write log to database: {$e->getMessage()}");
+        }
     }
 }

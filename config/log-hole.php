@@ -7,8 +7,19 @@ return [
         'level' => env('LOG_LEVEL', 'debug'),
         'table' => 'logs_hole',
     ],
-    'authorized_users' => [
-        // add the email of the authorized users
-    ],
+
+    // Database connection to use for logs (null = default connection)
+    'connection' => env('LOG_HOLE_DB_CONNECTION', null),
+
+    // Emails of users authorized to access the dashboard (empty = open access)
+    'authorized_users' => [],
+
+    // Route prefix for the dashboard
     'dashboard_route' => 'log-hole',
+
+    // Number of logs per page in the dashboard
+    'per_page' => 25,
+
+    // Auto-refresh the dashboard
+    'auto_refresh' => false,
 ];
