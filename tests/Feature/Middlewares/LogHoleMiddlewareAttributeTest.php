@@ -9,13 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Log;
-use Psr\Log\LoggerInterface;
 
 // ---------------------------------------------------------------------------
 // Named stub controllers required for class-level attribute tests.
-// PHP does not allow #[Attribute] syntax on variable assignments, so
-// controllers that carry a class-level #[Loggable] must be declared as
-// top-level named classes.
 // ---------------------------------------------------------------------------
 
 #[Loggable(message: 'controller action called', level: LogLevel::Warning)]
@@ -39,9 +35,6 @@ class ClassAndMethodLoggableController
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Build a mocked Route + Request pair for the given controller and action.
- */
 function makeRequestWithRoute(object $controller, string $method, string $action): Request
 {
     $route = Mockery::mock(Route::class);
@@ -55,30 +48,12 @@ function makeRequestWithRoute(object $controller, string $method, string $action
     return $request;
 }
 
-/**
- * Create a Mockery spy that satisfies LoggerInterface and stub Log::driver()
- * to return it. Returns the spy so callers can assert on it.
- *
- * The middleware resolves the logger via Log::driver() (no channel) or
- * Log::channel($name) (with channel). Log::spy() only intercepts direct
- * facade calls (e.g. Log::info()), not the chained ->log() on the returned
- * logger object, so we must stub driver() explicitly.
- */
-function makeLoggerSpy(): LoggerInterface
-{
-    $spy = Mockery::spy(LoggerInterface::class);
-
-    Log::shouldReceive('driver')->andReturn($spy);
-
-    return $spy;
-}
-
 // ---------------------------------------------------------------------------
 // Method-level attribute detection
 // ---------------------------------------------------------------------------
 
 it('detects method-level Loggable attribute and writes a log', function () {
-    $logger = makeLoggerSpy();
+    Log::spy();
 
     $controller = new class () {
         #[Loggable(message: 'order was placed', level: LogLevel::Info)]
@@ -88,41 +63,38 @@ it('detects method-level Loggable attribute and writes a log', function () {
     };
 
     $request = makeRequestWithRoute($controller, 'POST', 'store');
-
     $response = (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
     expect($response->getContent())->toBe('OK');
 
-    $logger->shouldHaveReceived('log')
+    Log::shouldHaveReceived('log')
         ->once()
         ->withArgs(fn ($level, $message) => $level === 'info' && $message === 'order was placed');
 });
 
 it('detects class-level Loggable attribute when the method has no attribute', function () {
-    $logger = makeLoggerSpy();
+    Log::spy();
 
     $controller = new ClassLevelLoggableController();
     $request = makeRequestWithRoute($controller, 'GET', 'index');
 
     (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
-    $logger->shouldHaveReceived('log')
+    Log::shouldHaveReceived('log')
         ->once()
         ->withArgs(fn ($level, $message) => $level === 'warning' && $message === 'controller action called');
 });
 
 it('method-level attribute takes priority over class-level attribute', function () {
-    $logger = makeLoggerSpy();
+    Log::spy();
 
     $controller = new ClassAndMethodLoggableController();
     $request = makeRequestWithRoute($controller, 'PUT', 'update');
 
     (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
-    // Only one log call, using method-level values
-    $logger->shouldHaveReceived('log')->once();
-
-    $logger->shouldHaveReceived('log')
+    Log::shouldHaveReceived('log')
+        ->once()
         ->withArgs(fn ($level, $message) => $level === 'error' && $message === 'method-level message');
 });
 
@@ -131,7 +103,7 @@ it('method-level attribute takes priority over class-level attribute', function 
 // ---------------------------------------------------------------------------
 
 it('includes method, url, and ip in context when includeRequest is true', function () {
-    $logger = makeLoggerSpy();
+    Log::spy();
 
     $controller = new class () {
         #[Loggable(message: 'sensitive action', includeRequest: true)]
@@ -141,7 +113,6 @@ it('includes method, url, and ip in context when includeRequest is true', functi
     };
 
     $request = Request::create('http://example.com/items/1', 'DELETE');
-
     $route = Mockery::mock(Route::class);
     $route->shouldReceive('getAction')->with('uses')->andReturn(get_class($controller) . '@destroy');
     $route->shouldReceive('getController')->andReturn($controller);
@@ -150,7 +121,7 @@ it('includes method, url, and ip in context when includeRequest is true', functi
 
     (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
-    $logger->shouldHaveReceived('log')
+    Log::shouldHaveReceived('log')
         ->once()
         ->withArgs(function ($level, $message, $context) {
             return $level === 'info'
@@ -161,7 +132,7 @@ it('includes method, url, and ip in context when includeRequest is true', functi
 });
 
 it('passes empty context array when includeRequest is false', function () {
-    $logger = makeLoggerSpy();
+    Log::spy();
 
     $controller = new class () {
         #[Loggable(message: 'quiet action', includeRequest: false)]
@@ -171,10 +142,9 @@ it('passes empty context array when includeRequest is false', function () {
     };
 
     $request = makeRequestWithRoute($controller, 'GET', 'show');
-
     (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
-    $logger->shouldHaveReceived('log')
+    Log::shouldHaveReceived('log')
         ->once()
         ->withArgs(fn ($level, $message, $context) => $context === []);
 });
@@ -184,7 +154,7 @@ it('passes empty context array when includeRequest is false', function () {
 // ---------------------------------------------------------------------------
 
 it('falls back to "{action} was called" when message is empty', function () {
-    $logger = makeLoggerSpy();
+    Log::spy();
 
     $controller = new class () {
         #[Loggable]
@@ -194,16 +164,15 @@ it('falls back to "{action} was called" when message is empty', function () {
     };
 
     $request = makeRequestWithRoute($controller, 'POST', 'publish');
-
     (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
-    $logger->shouldHaveReceived('log')
+    Log::shouldHaveReceived('log')
         ->once()
         ->withArgs(fn ($level, $message) => $message === 'publish was called');
 });
 
 it('uses custom message when explicitly provided', function () {
-    $logger = makeLoggerSpy();
+    Log::spy();
 
     $controller = new class () {
         #[Loggable(message: 'custom explicit message')]
@@ -213,10 +182,9 @@ it('uses custom message when explicitly provided', function () {
     };
 
     $request = makeRequestWithRoute($controller, 'GET', 'edit');
-
     (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
-    $logger->shouldHaveReceived('log')
+    Log::shouldHaveReceived('log')
         ->once()
         ->withArgs(fn ($level, $message) => $message === 'custom explicit message');
 });
@@ -226,13 +194,11 @@ it('uses custom message when explicitly provided', function () {
 // ---------------------------------------------------------------------------
 
 it('returns the response without logging when controller is null', function () {
-    $logger = Mockery::spy(LoggerInterface::class);
-    Log::shouldReceive('driver')->andReturn($logger);
+    Log::spy();
 
     $route = Mockery::mock(Route::class);
     $route->shouldReceive('getAction')->with('uses')->andReturn('SomeController@action');
-    $route->shouldReceive('getController')->andReturn(null);
-    $route->shouldReceive('getActionMethod')->andReturn('action');
+    $route->shouldReceive('getController')->andReturnNull();
 
     $request = Request::create('/test', 'GET');
     $request->setRouteResolver(fn () => $route);
@@ -240,7 +206,7 @@ it('returns the response without logging when controller is null', function () {
     $response = (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
     expect($response->getContent())->toBe('OK');
-    $logger->shouldNotHaveReceived('log');
+    Log::shouldNotHaveReceived('log');
 });
 
 // ---------------------------------------------------------------------------
@@ -248,7 +214,7 @@ it('returns the response without logging when controller is null', function () {
 // ---------------------------------------------------------------------------
 
 it('uses Log::channel() when a channel is specified in the attribute', function () {
-    $channelLogger = Mockery::mock(LoggerInterface::class);
+    $channelLogger = Mockery::mock(Psr\Log\LoggerInterface::class);
     $channelLogger->shouldReceive('log')
         ->once()
         ->withArgs(fn ($level, $message) => $level === 'info' && $message === 'channelled log');
@@ -263,7 +229,6 @@ it('uses Log::channel() when a channel is specified in the attribute', function 
     };
 
     $request = makeRequestWithRoute($controller, 'POST', 'notify');
-
     $response = (new LogHoleMiddleware())->handle($request, fn ($req) => new Response('OK'));
 
     expect($response->getContent())->toBe('OK');

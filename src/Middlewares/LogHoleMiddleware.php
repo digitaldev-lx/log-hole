@@ -33,11 +33,12 @@ class LogHoleMiddleware
         }
 
         $controller = $route->getController();
-        $action = $route->getActionMethod();
 
         if ($controller === null) {
             return $response;
         }
+
+        $action = $route->getActionMethod();
 
         $reflection = new ReflectionClass($controller);
 
@@ -73,15 +74,14 @@ class LogHoleMiddleware
                 ];
             }
 
-            $logger = $loggable->channel !== null
-                ? Log::channel($loggable->channel)
-                : Log::driver();
+            $level = strtolower($loggable->logLevel->value);
+            $message = $loggable->message ?: "{$action} was called";
 
-            $logger->log(
-                strtolower($loggable->logLevel->value),
-                $loggable->message ?: "{$action} was called",
-                $context,
-            );
+            if ($loggable->channel !== null) {
+                Log::channel($loggable->channel)->log($level, $message, $context);
+            } else {
+                Log::log($level, $message, $context);
+            }
         }
 
         return $response;
