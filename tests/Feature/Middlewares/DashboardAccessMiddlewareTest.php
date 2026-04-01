@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use DigitalDevLx\LogHole\Middlewares\LogHoleDashboardAccessMiddleware;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;

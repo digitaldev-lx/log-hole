@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Drivers;
 
 use Illuminate\Database\Query\Builder;
+use Override;
 
 class SqliteDriver extends RelationalDriver
 {
+    #[Override]
     protected function applySearch(Builder $query, string $search): Builder
     {
-        return $query->where(function (Builder $q) use ($search) {
-            $q->where('message', 'LIKE', "%{$search}%")
-                ->orWhere('context', 'LIKE', "%{$search}%");
-        });
-    }
+        $escaped = $this->escapeLike($search);
+        $pattern = "%{$escaped}%";
 
-    protected function truncate(): void
-    {
-        $this->newQuery()->delete();
+        return $query->where(function (Builder $q) use ($pattern) {
+            $q->whereRaw('message LIKE ? ESCAPE \'\\\'', [$pattern])
+                ->orWhereRaw('context LIKE ? ESCAPE \'\\\'', [$pattern]);
+        });
     }
 }

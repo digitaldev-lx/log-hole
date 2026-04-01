@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Drivers;
 
 use DateTimeInterface;
@@ -10,6 +12,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 class RelationalDriver implements LogDriverInterface
 {
@@ -18,12 +21,15 @@ class RelationalDriver implements LogDriverInterface
     ) {
     }
 
+    /**
+     * @param  array<string, mixed>|null  $context
+     */
     public function insert(LogLevel $level, string $message, ?array $context, ?DateTimeInterface $loggedAt): void
     {
         $this->newQuery()->insert([
             'level' => $level->value,
             'message' => $message,
-            'context' => $context !== null ? json_encode($context) : null,
+            'context' => $context !== null ? json_encode($context, JSON_THROW_ON_ERROR) : null,
             'logged_at' => $loggedAt,
         ]);
     }
@@ -42,6 +48,9 @@ class RelationalDriver implements LogDriverInterface
             ->get();
     }
 
+    /**
+     * @return LengthAwarePaginator<int, stdClass>
+     */
     public function paginate(
         ?LogLevel $level = null,
         ?string $search = null,
@@ -58,13 +67,6 @@ class RelationalDriver implements LogDriverInterface
     public function purge(?LogLevel $level = null, ?DateTimeInterface $before = null): int
     {
         $query = $this->newQuery();
-
-        if ($level === null && $before === null) {
-            $count = $query->count();
-            $this->truncate();
-
-            return $count;
-        }
 
         $query->when($level !== null, fn (Builder $q) => $q->where('level', $level->value));
         $query->when($before !== null, fn (Builder $q) => $q->where('logged_at', '<', $before));
@@ -92,11 +94,13 @@ class RelationalDriver implements LogDriverInterface
 
     public function getTableName(): string
     {
+        /** @var string */
         return config('log-hole.database.table', 'logs_hole');
     }
 
     protected function newQuery(): Builder
     {
+        /** @var ?string $connection */
         $connection = $this->connection ?? config('log-hole.connection');
 
         return $connection !== null
@@ -120,11 +124,17 @@ class RelationalDriver implements LogDriverInterface
 
     protected function applySearch(Builder $query, string $search): Builder
     {
-        return $query->where('message', 'LIKE', "%{$search}%");
+        $escaped = $this->escapeLike($search);
+
+        return $query->where('message', 'LIKE', "%{$escaped}%");
     }
 
-    protected function truncate(): void
+    protected function escapeLike(string $value): string
     {
-        $this->newQuery()->truncate();
+        return str_replace(
+            ['\\', '%', '_'],
+            ['\\\\', '\\%', '\\_'],
+            $value,
+        );
     }
 }

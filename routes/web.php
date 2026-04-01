@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use DigitalDevLx\LogHole\Http\Controllers\LogHoleController;
 use DigitalDevLx\LogHole\Middlewares\LogHoleDashboardAccessMiddleware;
 use Illuminate\Support\Facades\Route;

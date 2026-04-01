@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use DigitalDevLx\LogHole\Enums\LogLevel;
 use Monolog\Level;
 

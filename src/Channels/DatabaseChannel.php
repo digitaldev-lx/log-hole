@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Channels;
 
 use DigitalDevLx\LogHole\Drivers\DriverFactory;
@@ -10,10 +12,14 @@ use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
 use Throwable;
+use Override;
 
 class DatabaseChannel extends AbstractProcessingHandler
 {
-    public function __invoke(array $config)
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    public function __invoke(array $config): Logger
     {
         $level = $config['level'] ?? Level::Debug;
 
@@ -23,6 +29,7 @@ class DatabaseChannel extends AbstractProcessingHandler
         return $logger;
     }
 
+    #[Override]
     protected function write(LogRecord $record): void
     {
         try {
@@ -38,7 +45,13 @@ class DatabaseChannel extends AbstractProcessingHandler
         } catch (Throwable $e) {
             // Prevent infinite loop: do not log to same channel
             // Use error_log as last resort fallback
-            error_log("[LogHole] Failed to write log to database: {$e->getMessage()}");
+            error_log(sprintf(
+                '[LogHole] Failed to write log to database: [%s] %s in %s:%d',
+                $e::class,
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine(),
+            ));
         }
     }
 }

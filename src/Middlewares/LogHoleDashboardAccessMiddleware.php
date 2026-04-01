@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Middlewares;
 
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
 class LogHoleDashboardAccessMiddleware
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
+        /** @var array<int, string> $authorizedUsers */
         $authorizedUsers = config('log-hole.authorized_users');
 
         if (empty($authorizedUsers)) {
@@ -23,11 +28,8 @@ class LogHoleDashboardAccessMiddleware
             throw new AuthorizationException('You must be logged in to view this dashboard.');
         }
 
-        $email = method_exists($user, 'getEmailForVerification')
-            ? $user->getEmailForVerification()
-            : (string) data_get($user, 'email');
-
-        if (! in_array($email, $authorizedUsers, strict: true)) {
+        if (! Gate::forUser($user)->check('viewLogHole')) {
+            $email = (string) data_get($user, 'email');
             Log::warning("User {$email} tried to access the LogHole dashboard.");
             throw new AuthorizationException('You don\'t have access to view this dashboard.');
         }

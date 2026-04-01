@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use DigitalDevLx\LogHole\Drivers\Contracts\LogDriverInterface;
 use DigitalDevLx\LogHole\Drivers\DriverFactory;
 use DigitalDevLx\LogHole\Drivers\SqliteDriver;

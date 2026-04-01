@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use DigitalDevLx\LogHole\Tests\Helpers\LogSeeder;
 
 uses(LogSeeder::class);

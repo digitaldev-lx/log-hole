@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Drivers\Contracts;
 
 use DateTimeInterface;
@@ -11,6 +13,9 @@ use stdClass;
 
 interface LogDriverInterface
 {
+    /**
+     * @param  array<string, mixed>|null  $context
+     */
     public function insert(LogLevel $level, string $message, ?array $context, ?DateTimeInterface $loggedAt): void;
 
     /**
@@ -25,6 +30,9 @@ interface LogDriverInterface
         string $orderDirection = 'desc',
     ): Collection;
 
+    /**
+     * @return LengthAwarePaginator<int, stdClass>
+     */
     public function paginate(
         ?LogLevel $level = null,
         ?string $search = null,

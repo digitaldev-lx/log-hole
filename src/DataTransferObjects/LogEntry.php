@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\DataTransferObjects;
 
 use Carbon\Carbon;
@@ -7,6 +9,9 @@ use DigitalDevLx\LogHole\Enums\LogLevel;
 
 readonly class LogEntry
 {
+    /**
+     * @param  array<string, mixed>|null  $context
+     */
     public function __construct(
         public int $id,
         public LogLevel $level,

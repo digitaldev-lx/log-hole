@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 it('registers the dashboard route', function () {
     $route = app('router')->getRoutes()->getByName('log-hole.dashboard');
 

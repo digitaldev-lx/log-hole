@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Tests\Helpers;
 
 use Illuminate\Support\Facades\DB;

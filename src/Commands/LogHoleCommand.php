@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Commands;
 
 use Carbon\Carbon;
+use Carbon\Exceptions\InvalidFormatException;
 use DigitalDevLx\LogHole\Drivers\Contracts\LogDriverInterface;
 use DigitalDevLx\LogHole\Enums\LogLevel;
 use Illuminate\Console\Command;
@@ -32,9 +35,9 @@ class LogHoleCommand extends Command
         }
 
         $level = $this->resolveLevel();
-        $from = $this->option('from') ? Carbon::parse($this->option('from'))->startOfDay() : null;
-        $to = $this->option('to') ? Carbon::parse($this->option('to'))->endOfDay() : null;
-        $take = (int) ($this->option('take') ?? 10);
+        $from = $this->parseDate($this->option('from'))?->startOfDay();
+        $to = $this->parseDate($this->option('to'))?->endOfDay();
+        $take = min(max((int) ($this->option('take') ?? 10), 1), 1000);
 
         $levelLabel = $level !== null ? $level->value : 'ALL';
         $this->info("Fetching {$levelLabel} logs (limit: {$take})");
@@ -73,10 +76,25 @@ class LogHoleCommand extends Command
             'emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug',
         ];
 
-        $selected = collect($levels)->first(fn (string $option) => $this->option($option));
+        $selected = array_find($levels, fn (string $option) => $this->option($option));
 
         return $selected !== null
             ? LogLevel::fromString($selected)
             : null;
+    }
+
+    private function parseDate(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || $value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (InvalidFormatException) {
+            $this->warn("Invalid date format: {$value}");
+
+            return null;
+        }
     }
 }

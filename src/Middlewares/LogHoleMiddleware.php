@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Middlewares;
 
 use Closure;
@@ -9,10 +11,11 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 use ReflectionMethod;
+use Symfony\Component\HttpFoundation\Response;
 
 class LogHoleMiddleware
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
 
@@ -31,6 +34,10 @@ class LogHoleMiddleware
 
         $controller = $route->getController();
         $action = $route->getActionMethod();
+
+        if ($controller === null) {
+            return $response;
+        }
 
         $reflection = new ReflectionClass($controller);
 
@@ -68,7 +75,7 @@ class LogHoleMiddleware
 
             $logger = $loggable->channel !== null
                 ? Log::channel($loggable->channel)
-                : Log::getFacadeRoot();
+                : Log::driver();
 
             $logger->log(
                 strtolower($loggable->logLevel->value),

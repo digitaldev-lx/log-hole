@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole\Drivers;
 
 use Illuminate\Database\Query\Builder;
+use Override;
 
 class PostgreSqlDriver extends RelationalDriver
 {
+    #[Override]
     protected function applySearch(Builder $query, string $search): Builder
     {
-        return $query->where(function (Builder $q) use ($search) {
-            $q->where('message', 'ILIKE', "%{$search}%")
-                ->orWhereRaw('context::text ILIKE ?', ["%{$search}%"]);
+        $escaped = $this->escapeLike($search);
+
+        return $query->where(function (Builder $q) use ($escaped) {
+            $q->where('message', 'ILIKE', "%{$escaped}%")
+                ->orWhereRaw('context::text ILIKE ?', ["%{$escaped}%"]);
         });
     }
 }

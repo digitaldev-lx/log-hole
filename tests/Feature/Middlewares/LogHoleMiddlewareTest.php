@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use DigitalDevLx\LogHole\Middlewares\LogHoleMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;

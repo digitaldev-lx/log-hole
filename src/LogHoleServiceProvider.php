@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DigitalDevLx\LogHole;
 
 use DigitalDevLx\LogHole\Commands\LogHoleCommand;
@@ -31,6 +33,7 @@ class LogHoleServiceProvider extends PackageServiceProvider
     public function bootingPackage(): void
     {
         Gate::define('viewLogHole', function ($user = null) {
+            /** @var array<int, string> $authorizedUsers */
             $authorizedUsers = config('log-hole.authorized_users');
 
             if (empty($authorizedUsers)) {

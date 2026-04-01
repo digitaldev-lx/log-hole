@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use DigitalDevLx\LogHole\Attributes\Loggable;
 use DigitalDevLx\LogHole\Enums\LogLevel;
 

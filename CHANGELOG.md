@@ -5,6 +5,50 @@ All notable changes to `digitaldev-lx/log-hole` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-04-01
+
+### Added
+
+- **153 Pest tests** (up from 95) covering search escaping, purge atomicity, middleware attribute detection, controller edge cases, and all command flags
+- **LIKE wildcard escaping** via `escapeLike()` in all drivers — `%`, `_`, and `\` in search terms are now properly escaped
+- **SQLite ESCAPE clause** — `ESCAPE '\'` added to LIKE queries for correct wildcard escaping
+- **Date validation** in controller and command — `Carbon::parse()` wrapped in try-catch, invalid dates are silently ignored instead of causing 500 errors
+- **Input type safety** — controller validates `search` and `level` params are strings, rejects array injection
+- **`--take` clamping** in `log-hole:tail` — value clamped between 1 and 1000
+- **Null controller guard** in `LogHoleMiddleware` — prevents ReflectionClass error on misconfigured routes
+
+### Changed
+
+- **PHP minimum version raised to 8.4** (from 8.2)
+- **Laravel 10 support dropped** — now supports Laravel 11.x, 12.x, and 13.x
+- **PHPStan raised to level 6** with Larastan 3.x and PHPStan 2.x
+- **Pest upgraded to 3.x** (from 2.x) with matching plugin versions
+- **`declare(strict_types=1)` enforced** across all PHP files via Pint
+- **`#[\Override]` attribute** added to all overriding methods in drivers and DatabaseChannel
+- **`array_find()`** (PHP 8.4) replaces `collect()->first()` in `LogHoleCommand::resolveLevel()`
+- **`str_contains()`** replaces `stripos()` in `DriverFactory::isMariaDb()`
+- **`Log::getFacadeRoot()`** replaced with `Log::driver()` in LogHoleMiddleware
+- **Return type declarations** added to middleware `handle()`, `DatabaseChannel::__invoke()`, `LogHoleController::index()`
+- **CI matrix** updated: PHP 8.4, Laravel 11/12/13, Testbench 9/10/11
+- **Larastan** upgraded to v3.x (PHPStan 2.x ecosystem)
+- **`LogHoleDashboardAccessMiddleware`** now uses the `viewLogHole` Gate instead of duplicating authorization logic
+- **`DatabaseChannel` error fallback** now includes exception class, file, and line number
+- **MySQL JSON search** uses `JSON_SEARCH()` instead of inefficient `JSON_EXTRACT()` with LIKE
+- **`json_encode()` in insert** now uses `JSON_THROW_ON_ERROR` to fail loudly instead of silently inserting `false`
+
+### Fixed
+
+- **LIKE wildcard injection** — search terms containing `%` or `_` no longer act as SQL wildcards across all drivers
+- **Race condition in `purge()`** — replaced non-atomic `count()` + `truncate()` with single `delete()` that returns affected rows
+- **Duplicate authorization logic** — middleware and service provider shared identical email extraction code; middleware now delegates to the Gate
+- **Redundant database index** — removed individual `level` index (covered by composite `['level', 'logged_at']`)
+
+### Removed
+
+- **PHP 8.2/8.3 support** — minimum is now PHP 8.4
+- **Laravel 10 support** — minimum is now Laravel 11
+- **`truncate()` method** — removed from `RelationalDriver` and `SqliteDriver` (purge always uses `delete()` now)
+
 ## [2.0.0] - 2026-02-27
 
 ### Added
@@ -111,6 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database migration for `logs_hole` table
 - Package configuration file
 
+[3.0.0]: https://github.com/digitaldev-lx/log-hole/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/digitaldev-lx/log-hole/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/digitaldev-lx/log-hole/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/digitaldev-lx/log-hole/compare/v1.1.0...v1.2.0
