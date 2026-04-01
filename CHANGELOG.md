@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **PHP minimum version raised to 8.4** (from 8.2)
-- **Laravel 10 support dropped** — now supports Laravel 11.x, 12.x, and 13.x
+- **Laravel 10 support dropped** — now supports Laravel 11.x and 12.x
 - **PHPStan raised to level 6** with Larastan 3.x and PHPStan 2.x
 - **Pest upgraded to 3.x** (from 2.x) with matching plugin versions
 - **`declare(strict_types=1)` enforced** across all PHP files via Pint
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`str_contains()`** replaces `stripos()` in `DriverFactory::isMariaDb()`
 - **`Log::getFacadeRoot()`** replaced with `Log::driver()` in LogHoleMiddleware
 - **Return type declarations** added to middleware `handle()`, `DatabaseChannel::__invoke()`, `LogHoleController::index()`
-- **CI matrix** updated: PHP 8.4, Laravel 11/12/13, Testbench 9/10/11
+- **CI matrix** updated: PHP 8.4, Laravel 11/12, Testbench 9/10
 - **Larastan** upgraded to v3.x (PHPStan 2.x ecosystem)
 - **`LogHoleDashboardAccessMiddleware`** now uses the `viewLogHole` Gate instead of duplicating authorization logic
 - **`DatabaseChannel` error fallback** now includes exception class, file, and line number
