@@ -16,8 +16,13 @@
     backupStaticProperties="false"
 >
     <testsuites>
-        <testsuite name="DigitalDevLx Test Suite">
-            <directory>tests</directory>
+        <testsuite name="default">
+            <directory>tests/Unit</directory>
+            <directory>tests/Feature</directory>
+            <file>tests/ArchTest.php</file>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
     <logging>

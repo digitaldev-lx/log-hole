@@ -5,6 +5,42 @@ All notable changes to `digitaldev-lx/log-hole` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2026-05-04
+
+### Changed
+
+- **Laravel 13 only** — bumped `illuminate/contracts` to `^13.0` (was `^11.0||^12.0`)
+- **`spatie/laravel-package-tools`** bumped to `^1.93||^2.0` for Laravel 13 compatibility
+- **CI matrix** simplified to a single Laravel/Testbench combination: Laravel 13.* with Testbench 11.*; added Postgres 16 and MySQL 8.4 integration jobs
+- **Pest** upgraded to 4.x (was 3.x), with matching `pest-plugin-arch` and `pest-plugin-laravel` 4.x
+- **Orchestra Testbench** bumped to `^11.1` (was `^9.0||^10.0`)
+- **Larastan** bumped to `^3.9` for Laravel 13 support (was `^3.0`)
+- **`nunomaduro/collision`** bumped to `^8.9` (was `^8.1`) — workbench 11 caps it at 8.x
+
+### Fixed
+
+- **PostgreSQL: missing `ESCAPE` clause** — `escapeLike()` produced `\%`/`\_` but the SQL had no `ESCAPE`, so Postgres treated `\` as a literal character and ignored the escaping. Searches for `%` matched every row. The driver now emits `ILIKE ? ESCAPE ?` with `~` as the escape character.
+- **SQL Server: missing `ESCAPE` clause** — same root cause as Postgres. Now emits `LIKE ? ESCAPE ?`.
+- **MySQL/MariaDB: `JSON_SEARCH` ignored escaping and used different match semantics** — wildcards in the search term were treated as `LIKE` wildcards by `JSON_SEARCH` while the `message` column escaped them; results were inconsistent across columns. The drivers now use `CAST(context AS CHAR) LIKE ? ESCAPE ?`, giving identical substring semantics across both columns and across MySQL/MariaDB.
+- **Pagination: unstable order with identical timestamps** — `ORDER BY logged_at` alone could return the same row on multiple pages or skip rows when many logs shared a second. Added `ORDER BY logged_at, id` tiebreaker.
+- **`DatabaseChannel` recreated the driver on every log entry** — bypassed the singleton registered by the service provider, forcing a fresh `getPdo()` + `ATTR_SERVER_VERSION` lookup per write. Now resolves the driver from the container.
+- **`DriverFactory::isMariaDb()` opened the PDO connection on every call** — added a per-connection static cache. Use `DriverFactory::clearCache()` in tests when swapping connections.
+- **`insert()` accepted `null` for `logged_at`** — would silently insert `NULL`. Now falls back to the current timestamp.
+
+### Added
+
+- **`stats_cache_ttl` config option** — caches the dashboard stats query for the given seconds (`0` disables, default). Useful with auto-refresh on large logs tables. Set via `LOG_HOLE_STATS_CACHE_TTL` env var.
+- **Chunked purge** — `purge()` accepts a `chunkSize` argument (default `0` = single statement). When positive, deletes in batches to reduce lock contention and binlog size on multi-million-row tables.
+- **`mariadb` driver name** auto-detection — `DriverFactory` now also matches the explicit `mariadb` PDO driver name introduced in newer Laravel database configs.
+- **Integration test suite** — `tests/Integration/` runs against real Postgres and MySQL services in CI. Skipped locally unless `LOG_HOLE_INTEGRATION_DB` is set.
+- **`DatabaseChannel` rate-limits its error fallback** — `error_log()` is now emitted at most once per minute to prevent stderr flooding during transient DB errors.
+
+### Removed
+
+- **Laravel 11 support** — users on Laravel 11 should pin to `^3.0`
+- **Laravel 12 support** — users on Laravel 12 should pin to `^3.0`
+- **Backslash as `LIKE` escape character** — replaced with `~` for cross-DB portability. The change is internal; user-facing search semantics are unchanged.
+
 ## [3.0.0] - 2026-04-01
 
 ### Added
@@ -155,6 +191,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database migration for `logs_hole` table
 - Package configuration file
 
+[4.0.0]: https://github.com/digitaldev-lx/log-hole/compare/v3.0.0...v4.0.0
 [3.0.0]: https://github.com/digitaldev-lx/log-hole/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/digitaldev-lx/log-hole/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/digitaldev-lx/log-hole/compare/v1.2.0...v1.3.0

@@ -24,4 +24,8 @@ return [
 
     // Auto-refresh the dashboard
     'auto_refresh' => false,
+
+    // Cache TTL (in seconds) for the stats() query. 0 disables caching.
+    // Useful when the dashboard auto-refreshes against a large logs table.
+    'stats_cache_ttl' => env('LOG_HOLE_STATS_CACHE_TTL', 0),
 ];

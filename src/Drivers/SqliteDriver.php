@@ -12,12 +12,12 @@ class SqliteDriver extends RelationalDriver
     #[Override]
     protected function applySearch(Builder $query, string $search): Builder
     {
-        $escaped = $this->escapeLike($search);
-        $pattern = "%{$escaped}%";
+        $pattern = '%' . $this->escapeLike($search) . '%';
+        $escape = self::ESCAPE_CHAR;
 
-        return $query->where(function (Builder $q) use ($pattern) {
-            $q->whereRaw('message LIKE ? ESCAPE \'\\\'', [$pattern])
-                ->orWhereRaw('context LIKE ? ESCAPE \'\\\'', [$pattern]);
+        return $query->where(function (Builder $q) use ($pattern, $escape) {
+            $q->whereRaw('message LIKE ? ESCAPE ?', [$pattern, $escape])
+                ->orWhereRaw('IFNULL(context, \'\') LIKE ? ESCAPE ?', [$pattern, $escape]);
         });
     }
 }

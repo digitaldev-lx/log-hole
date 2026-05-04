@@ -12,11 +12,12 @@ class MySqlDriver extends RelationalDriver
     #[Override]
     protected function applySearch(Builder $query, string $search): Builder
     {
-        $escaped = $this->escapeLike($search);
+        $pattern = '%' . $this->escapeLike($search) . '%';
+        $escape = self::ESCAPE_CHAR;
 
-        return $query->where(function (Builder $q) use ($escaped, $search) {
-            $q->where('message', 'LIKE', "%{$escaped}%")
-                ->orWhereRaw('JSON_SEARCH(context, \'one\', ?) IS NOT NULL', [$search]);
+        return $query->where(function (Builder $q) use ($pattern, $escape) {
+            $q->whereRaw('message LIKE ? ESCAPE ?', [$pattern, $escape])
+                ->orWhereRaw('CAST(context AS CHAR) LIKE ? ESCAPE ?', [$pattern, $escape]);
         });
     }
 }

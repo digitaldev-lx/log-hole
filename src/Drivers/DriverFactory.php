@@ -11,6 +11,9 @@ use Throwable;
 
 class DriverFactory
 {
+    /** @var array<string, bool> */
+    private static array $isMariaDbCache = [];
+
     public static function make(?string $connection = null): LogDriverInterface
     {
         /** @var ?string $connection */
@@ -20,11 +23,17 @@ class DriverFactory
 
         return match ($driverName) {
             'mysql' => self::isMariaDb($connection) ? new MariaDbDriver($connection) : new MySqlDriver($connection),
+            'mariadb' => new MariaDbDriver($connection),
             'pgsql' => new PostgreSqlDriver($connection),
             'sqlite' => new SqliteDriver($connection),
             'sqlsrv' => new SqlServerDriver($connection),
             default => new RelationalDriver($connection),
         };
+    }
+
+    public static function clearCache(): void
+    {
+        self::$isMariaDbCache = [];
     }
 
     protected static function detectDriver(?string $connection): string
@@ -38,11 +47,18 @@ class DriverFactory
 
     protected static function isMariaDb(?string $connection): bool
     {
+        $key = $connection ?? '__default__';
+
+        return self::$isMariaDbCache[$key] ??= self::detectMariaDb($connection);
+    }
+
+    protected static function detectMariaDb(?string $connection): bool
+    {
         try {
             $pdo = DB::connection($connection)->getPdo();
             $version = $pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
 
-            return str_contains(strtolower($version), 'mariadb');
+            return is_string($version) && str_contains(strtolower($version), 'mariadb');
         } catch (Throwable) {
             return false;
         }

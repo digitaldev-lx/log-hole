@@ -12,11 +12,12 @@ class SqlServerDriver extends RelationalDriver
     #[Override]
     protected function applySearch(Builder $query, string $search): Builder
     {
-        $escaped = $this->escapeLike($search);
+        $pattern = '%' . $this->escapeLike($search) . '%';
+        $escape = self::ESCAPE_CHAR;
 
-        return $query->where(function (Builder $q) use ($escaped) {
-            $q->where('message', 'LIKE', "%{$escaped}%")
-                ->orWhereRaw('CAST(context AS NVARCHAR(MAX)) LIKE ?', ["%{$escaped}%"]);
+        return $query->where(function (Builder $q) use ($pattern, $escape) {
+            $q->whereRaw('message LIKE ? ESCAPE ?', [$pattern, $escape])
+                ->orWhereRaw('CAST(context AS NVARCHAR(MAX)) LIKE ? ESCAPE ?', [$pattern, $escape]);
         });
     }
 }

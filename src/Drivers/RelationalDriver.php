@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace DigitalDevLx\LogHole\Drivers;
 
 use DateTimeInterface;
+use DateTimeImmutable;
 use DigitalDevLx\LogHole\DataTransferObjects\LogStats;
 use DigitalDevLx\LogHole\Drivers\Contracts\LogDriverInterface;
 use DigitalDevLx\LogHole\Enums\LogLevel;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
 class RelationalDriver implements LogDriverInterface
 {
+    protected const ESCAPE_CHAR = '~';
+
     public function __construct(
         protected ?string $connection = null,
     ) {
@@ -30,7 +34,7 @@ class RelationalDriver implements LogDriverInterface
             'level' => $level->value,
             'message' => $message,
             'context' => $context !== null ? json_encode($context, JSON_THROW_ON_ERROR) : null,
-            'logged_at' => $loggedAt,
+            'logged_at' => $loggedAt ?? new DateTimeImmutable(),
         ]);
     }
 
@@ -44,6 +48,7 @@ class RelationalDriver implements LogDriverInterface
     ): Collection {
         return $this->applyFilters($this->newQuery(), $level, $search, $from, $to)
             ->orderBy('logged_at', $orderDirection)
+            ->orderBy('id', $orderDirection)
             ->limit($limit)
             ->get();
     }
@@ -61,20 +66,49 @@ class RelationalDriver implements LogDriverInterface
     ): LengthAwarePaginator {
         return $this->applyFilters($this->newQuery(), $level, $search, $from, $to)
             ->orderBy('logged_at', $orderDirection)
+            ->orderBy('id', $orderDirection)
             ->paginate($perPage);
     }
 
-    public function purge(?LogLevel $level = null, ?DateTimeInterface $before = null): int
+    public function purge(?LogLevel $level = null, ?DateTimeInterface $before = null, int $chunkSize = 0): int
     {
-        $query = $this->newQuery();
+        if ($chunkSize <= 0) {
+            return $this->buildPurgeQuery($level, $before)->delete();
+        }
 
-        $query->when($level !== null, fn (Builder $q) => $q->where('level', $level->value));
-        $query->when($before !== null, fn (Builder $q) => $q->where('logged_at', '<', $before));
+        $total = 0;
+        do {
+            $deleted = $this->buildPurgeQuery($level, $before)->limit($chunkSize)->delete();
+            $total += $deleted;
+        } while ($deleted === $chunkSize);
 
-        return $query->delete();
+        return $total;
     }
 
     public function stats(): LogStats
+    {
+        /** @var int $ttl */
+        $ttl = config('log-hole.stats_cache_ttl', 0);
+
+        if ($ttl <= 0) {
+            return $this->computeStats();
+        }
+
+        /** @var LogStats */
+        return Cache::remember(
+            $this->getStatsCacheKey(),
+            $ttl,
+            fn (): LogStats => $this->computeStats(),
+        );
+    }
+
+    public function getTableName(): string
+    {
+        /** @var string */
+        return config('log-hole.database.table', 'logs_hole');
+    }
+
+    protected function computeStats(): LogStats
     {
         $results = $this->newQuery()
             ->selectRaw('level, COUNT(*) as count')
@@ -92,10 +126,9 @@ class RelationalDriver implements LogDriverInterface
         return new LogStats(total: $total, byLevel: $byLevel);
     }
 
-    public function getTableName(): string
+    protected function getStatsCacheKey(): string
     {
-        /** @var string */
-        return config('log-hole.database.table', 'logs_hole');
+        return 'log-hole:stats:' . ($this->connection ?? 'default') . ':' . $this->getTableName();
     }
 
     protected function newQuery(): Builder
@@ -106,6 +139,16 @@ class RelationalDriver implements LogDriverInterface
         return $connection !== null
             ? DB::connection($connection)->table($this->getTableName())
             : DB::table($this->getTableName());
+    }
+
+    protected function buildPurgeQuery(?LogLevel $level, ?DateTimeInterface $before): Builder
+    {
+        $query = $this->newQuery();
+
+        $query->when($level !== null, fn (Builder $q) => $q->where('level', $level->value));
+        $query->when($before !== null, fn (Builder $q) => $q->where('logged_at', '<', $before));
+
+        return $query;
     }
 
     protected function applyFilters(
@@ -124,16 +167,25 @@ class RelationalDriver implements LogDriverInterface
 
     protected function applySearch(Builder $query, string $search): Builder
     {
-        $escaped = $this->escapeLike($search);
+        $pattern = '%' . $this->escapeLike($search) . '%';
 
-        return $query->where('message', 'LIKE', "%{$escaped}%");
+        return $query->whereRaw(
+            'message LIKE ? ESCAPE ?',
+            [$pattern, self::ESCAPE_CHAR],
+        );
     }
 
+    /**
+     * Escape LIKE wildcards using ~ as escape character.
+     *
+     * Using ~ instead of \ avoids cross-DB inconsistencies with backslash
+     * string-literal handling (MySQL vs Postgres standard_conforming_strings).
+     */
     protected function escapeLike(string $value): string
     {
         return str_replace(
-            ['\\', '%', '_'],
-            ['\\\\', '\\%', '\\_'],
+            [self::ESCAPE_CHAR, '%', '_'],
+            [self::ESCAPE_CHAR . self::ESCAPE_CHAR, self::ESCAPE_CHAR . '%', self::ESCAPE_CHAR . '_'],
             $value,
         );
     }

@@ -12,11 +12,12 @@ class PostgreSqlDriver extends RelationalDriver
     #[Override]
     protected function applySearch(Builder $query, string $search): Builder
     {
-        $escaped = $this->escapeLike($search);
+        $pattern = '%' . $this->escapeLike($search) . '%';
+        $escape = self::ESCAPE_CHAR;
 
-        return $query->where(function (Builder $q) use ($escaped) {
-            $q->where('message', 'ILIKE', "%{$escaped}%")
-                ->orWhereRaw('context::text ILIKE ?', ["%{$escaped}%"]);
+        return $query->where(function (Builder $q) use ($pattern, $escape) {
+            $q->whereRaw('message ILIKE ? ESCAPE ?', [$pattern, $escape])
+                ->orWhereRaw('context::text ILIKE ? ESCAPE ?', [$pattern, $escape]);
         });
     }
 }
